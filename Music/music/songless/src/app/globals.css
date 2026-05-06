@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05070c;
+  --foreground: #eef2ff;
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --muted: rgba(255, 255, 255, 0.7);
+  --muted2: rgba(255, 255, 255, 0.55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #05070c;
+    --foreground: #eef2ff;
+  }
+}
+
+body {
+  background: radial-gradient(900px 500px at 15% 10%, rgba(99, 102, 241, 0.25), transparent 60%),
+    radial-gradient(800px 500px at 85% 25%, rgba(14, 165, 233, 0.20), transparent 60%),
+    radial-gradient(800px 600px at 55% 95%, rgba(236, 72, 153, 0.14), transparent 60%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-6px);
+  }
+  30% {
+    transform: translateX(6px);
+  }
+  45% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+  90% {
+    transform: translateX(2px);
+  }
+}
+
+.shake {
+  animation: shake 420ms ease;
+}

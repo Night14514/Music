@@ -1,0 +1,20 @@
+[
+  { "id": 1, "title": "Твой 03", "artist": "Azzi", "file": "/tracks/Azzi - Твой 03.mp3", "start": 14 },
+  { "id": 2, "title": "Pochemu", "artist": "Blvckholes", "file": "/tracks/Blvckholes - Pochemu.mp3", "start": 19 },
+  { "id": 3, "title": "марафеты", "artist": "dabbackwood", "file": "/tracks/dabbackwood - марафеты.mp3", "start": 11 },
+  { "id": 4, "title": "Фразами к тебе", "artist": "Mania", "file": "/tracks/Mania - Фразами к тебе.mp3", "start": 17 },
+  { "id": 5, "title": "таблетки", "artist": "голодный", "file": "/tracks/голодный - таблетки.mp3", "start": 20 },
+  { "id": 6, "title": "Заебало", "artist": "Unknown", "file": "/tracks/Заебало.mp3", "start": 13 },
+  { "id": 7, "title": "Самый лучший день", "artist": "Кишлак", "file": "/tracks/Кишлак - Самый лучший день.mp3", "start": 16 },
+  { "id": 8, "title": "Демоны пляшут", "artist": "КОРЗА", "file": "/tracks/КОРЗА - Демоны пляшут.mp3", "start": 10 },
+  { "id": 9, "title": "Мило материшься", "artist": "Unknown", "file": "/tracks/Мило материшься.mp3", "start": 18 },
+  { "id": 10, "title": "Отказываю небу", "artist": "Unknown", "file": "/tracks/Отказываю небу.mp3", "start": 12 },
+  {
+    "id": 11,
+    "title": "Это пройдет быстро",
+    "artist": "пороксердца",
+    "file": "/tracks/пороксердца Это пройдет быстро.mp3",
+    "start": 15
+  },
+  { "id": 12, "title": "ПОРШЕ", "artist": "Unknown", "file": "/tracks/ПОРШЕ.mp3", "start": 20 }
+]
