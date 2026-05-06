@@ -16,5 +16,51 @@
     "file": "/tracks/пороксердца Это пройдет быстро.mp3",
     "start": 15
   },
-  { "id": 12, "title": "ПОРШЕ", "artist": "Unknown", "file": "/tracks/ПОРШЕ.mp3", "start": 20 }
+  { "id": 12, "title": "ПОРШЕ", "artist": "Unknown", "file": "/tracks/ПОРШЕ.mp3", "start": 20 },
+  { "id": 13, "title": "NA BALKONE", "artist": "FOGEL", "file": "/tracks/FOGEL - NA BALKONE.mp3", "start": 12 },
+  { "id": 14, "title": "Либералы", "artist": "ICEGERGERT", "file": "/tracks/ICEGERGERT - Либералы.mp3", "start": 18 },
+  {
+    "id": 15,
+    "title": "Наследство",
+    "artist": "ICEGERGERT, SKY RAE",
+    "file": "/tracks/ICEGERGERT, SKY RAE - Наследство.mp3",
+    "start": 11
+  },
+  { "id": 16, "title": "Дорога дальняя", "artist": "Jakone", "file": "/tracks/Jakone - Дорога дальняя.mp3", "start": 17 },
+  {
+    "id": 17,
+    "title": "Пачка сигарет",
+    "artist": "LIZER, boyfifty, LIZER",
+    "file": "/tracks/LIZER, boyfifty, LIZER - Пачка сигарет.mp3",
+    "start": 14
+  },
+  { "id": 18, "title": "Мёртвые души", "artist": "SKWLKR", "file": "/tracks/SKWLKR - Мёртвые души.mp3", "start": 20 },
+  { "id": 19, "title": "skwlkr-na-rubezhe", "artist": "Unknown", "file": "/tracks/skwlkr-na-rubezhe.mp3", "start": 10 },
+  {
+    "id": 20,
+    "title": "All The Things She Said",
+    "artist": "tATu",
+    "file": "/tracks/tATu - All The Things She Said.mp3",
+    "start": 16
+  },
+  { "id": 21, "title": "Смузи", "artist": "The Limba", "file": "/tracks/The Limba - Смузи.mp3", "start": 13 },
+  {
+    "id": 22,
+    "title": "АЗИАТСКАЯ ЭСТЕТИКА",
+    "artist": "Ulukmanapo",
+    "file": "/tracks/Ulukmanapo - АЗИАТСКАЯ ЭСТЕТИКА.mp3",
+    "start": 19
+  },
+  {
+    "id": 23,
+    "title": "Голодная собака",
+    "artist": "V  X V PRiNCE",
+    "file": "/tracks/V  X V PRiNCE - Голодная собака.mp3",
+    "start": 15
+  },
+  { "id": 24, "title": "Life", "artist": "Zivert", "file": "/tracks/Zivert - Life.mp3", "start": 12 },
+  { "id": 25, "title": "Отечество", "artist": "Гио Пика", "file": "/tracks/Гио Пика - Отечество.mp3", "start": 18 },
+  { "id": 26, "title": "Магнитола", "artist": "Мэвл", "file": "/tracks/Мэвл - Магнитола.mp3", "start": 11 },
+  { "id": 27, "title": "Пьяный дождь", "artist": "Макс Корж", "file": "/tracks/Пьяный дождь - Макс Корж.mp3", "start": 17 },
+  { "id": 28, "title": "СЕДАЦИЯ", "artist": "Unknown", "file": "/tracks/СЕДАЦИЯ.mp3", "start": 14 }
 ]

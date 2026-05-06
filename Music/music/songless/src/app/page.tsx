@@ -9,6 +9,7 @@ import {
   GameMode,
   hintFor,
   isCorrectGuess,
+  normalizeGuess,
   scoreForAnswer,
   SNIPPET_DURATION_SEC,
 } from "@/lib/game";
@@ -122,6 +123,7 @@ function Progress({
 
 export default function Home() {
   const [mode, setMode] = useLocalStorageState<GameMode>("songless:mode", "normal");
+  const [reloadNonce, setReloadNonce] = useState(0);
   const [bundle, setBundle] = useState<{
     mode: GameMode;
     date: string;
@@ -146,16 +148,29 @@ export default function Home() {
   const gainRef = useRef<GainNode | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const bufferCacheRef = useRef<Map<string, AudioBuffer>>(new Map());
+  const playSeqRef = useRef(0);
   const stopTimerRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playedSec, setPlayedSec] = useState(0);
   const [trackStartedAt, setTrackStartedAt] = useState<number | null>(null);
 
-  const currentTrack = bundle?.tracks[index] ?? null;
+  const [queueIds, setQueueIds] = useLocalStorageState<number[]>("songless:queueIds", []);
+  const [queuePos, setQueuePos] = useLocalStorageState<number>("songless:queuePos", 0);
+  const [playedIds, setPlayedIds] = useLocalStorageState<number[]>("songless:playedIds", []);
+
+  const tracksById = useMemo(() => {
+    const m = new Map<number, Track>();
+    for (const t of bundle?.tracks ?? []) m.set(t.id, t);
+    return m;
+  }, [bundle?.tracks]);
+
+  const currentTrackId = queueIds[queuePos] ?? null;
+  const currentTrack = currentTrackId != null ? tracksById.get(currentTrackId) ?? null : null;
   const attemptIndex = Math.min(wrongCount, 4);
   const durationSec = SNIPPET_DURATION_SEC;
-  const hint = currentTrack ? hintFor(currentTrack, wrongCount) : null;
+  const hintAllowed = normalizeGuess(input).length >= 4;
+  const hint = currentTrack && hintAllowed ? hintFor(currentTrack, wrongCount) : null;
 
   const catalog = bundle?.catalog;
   const fuse = useMemo(() => {
@@ -208,7 +223,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [mode]);
+  }, [mode, reloadNonce]);
 
   useEffect(() => {
     return () => {
@@ -220,6 +235,47 @@ export default function Home() {
       sourceRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const all = bundle?.tracks ?? [];
+    if (!all.length) return;
+
+    // Keep a single "no repeats" pool even when switching modes.
+    const allIds = all.map((t) => t.id);
+    const playedSet = new Set(playedIds);
+    const remaining = allIds.filter((id) => !playedSet.has(id));
+
+    // If everything was played, start a new cycle.
+    const base = remaining.length ? remaining : allIds;
+    if (!remaining.length && playedIds.length) {
+      setPlayedIds([]);
+    }
+
+    // If current queue doesn't match the current remaining pool, rebuild it.
+    const poolSet = new Set(base);
+    const queueIsValid =
+      queueIds.length > 0 && queueIds.every((id) => poolSet.has(id)) && poolSet.size === queueIds.length;
+
+    if (!queueIsValid) {
+      const shuffled = base.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const r = crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+        const j = r % (i + 1);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      setQueueIds(shuffled);
+      setQueuePos(0);
+      setIndex(0);
+      setStatus("playing");
+      return;
+    }
+
+    // Ensure the pointer stays in-bounds.
+    if (queuePos >= queueIds.length) {
+      setQueuePos(0);
+      setIndex(0);
+    }
+  }, [bundle?.tracks, playedIds, queueIds, queuePos, setPlayedIds, setQueueIds, setQueuePos]);
 
   useEffect(() => {
     setPlayedSec(0);
@@ -238,6 +294,8 @@ export default function Home() {
   }
 
   function stopAudio() {
+    // Invalidate any in-flight playSnippet() calls (prevents overlap on rapid clicks).
+    playSeqRef.current += 1;
     try {
       sourceRef.current?.stop();
     } catch {}
@@ -297,10 +355,13 @@ export default function Home() {
     setPlayedSec(0);
 
     try {
+      const seq = playSeqRef.current;
       const { ctx, gain } = getAudioGraph();
       if (ctx.state === "suspended") await ctx.resume();
+      if (seq !== playSeqRef.current) return;
 
       const buf = await loadBuffer(currentTrack.file);
+      if (seq !== playSeqRef.current) return;
       const maxStart = Math.max(0, buf.duration - durationSec);
       const offset = Math.min(Math.max(0, currentTrack.start), maxStart);
 
@@ -337,12 +398,18 @@ export default function Home() {
   function nextTrack() {
     stopAudio();
     if (!bundle) return;
-    const next = index + 1;
-    if (next >= bundle.tracks.length) {
+    if (currentTrackId != null && !playedIds.includes(currentTrackId)) {
+      setPlayedIds((prev) => [...prev, currentTrackId]);
+    }
+
+    const nextPos = queuePos + 1;
+    setQueuePos(nextPos);
+    setIndex(nextPos);
+
+    if (nextPos >= queueIds.length) {
       setStatus("done");
       return;
     }
-    setIndex(next);
     setStatus("playing");
   }
 
@@ -408,14 +475,19 @@ export default function Home() {
   }
 
   function resetRun() {
+    stopAudio();
     setScore(0);
+    setPlayedIds([]);
+    setQueueIds([]);
+    setQueuePos(0);
     setIndex(0);
     setWrongCount(0);
     setSelectedGuess(null);
     setRevealed(false);
     setInput("");
     setActiveOption(0);
-    setStatus(bundle?.tracks?.length ? "playing" : "done");
+    setStatus("loading");
+    setReloadNonce((n) => n + 1);
   }
 
   const canPlay = status !== "loading" && !!currentTrack;
@@ -548,8 +620,8 @@ export default function Home() {
 
           <div className="mb-4">
             <Progress
-              current={bundle ? index + 1 : 0}
-              total={bundle?.tracks.length ?? 0}
+              current={queueIds.length ? queuePos + 1 : 0}
+              total={queueIds.length}
               durationSec={durationSec}
               playedSec={playedSec}
             />
@@ -588,7 +660,7 @@ export default function Home() {
                 <PrimaryButton type="button" onClick={resetRun}>
                   Сбросить
                 </PrimaryButton>
-                <SecondaryButton type="button" onClick={() => setMode(mode)}>
+                <SecondaryButton type="button" onClick={resetRun}>
                   Играть снова
                 </SecondaryButton>
               </div>
