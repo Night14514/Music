@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { Track } from "@/lib/tracks";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -10,23 +11,9 @@ export async function GET(req: Request) {
   const date = new Date().toISOString().slice(0, 10);
 
   try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("tracks")
-      .select("id,title,artist,file,start")
-      .order("id", { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    const all: Track[] = (data ?? []).map((row) => ({
-      id: Number(row.id),
-      title: String(row.title),
-      artist: String(row.artist),
-      file: String(row.file),
-      start: Number(row.start),
-    }));
+    const filePath = join(process.cwd(), "public", "tracks", "tracks.json");
+    const raw = readFileSync(filePath, "utf-8");
+    const all: Track[] = JSON.parse(raw);
 
     return NextResponse.json(
       {
@@ -38,17 +25,11 @@ export async function GET(req: Request) {
       },
       { status: 200 },
     );
-  } catch {
+  } catch (err) {
+    console.error("Failed to load tracks.json:", err);
     return NextResponse.json(
-      {
-        mode,
-        date,
-        tracks: [],
-        catalog: [],
-        totalTracks: 0,
-      },
-      { status: 200 },
+      { mode, date, tracks: [], catalog: [], totalTracks: 0 },
+      { status: 500 },
     );
   }
 }
-

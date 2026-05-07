@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from bot.handlers.tracks import router as tracks_router
 from bot.services.config import load_settings
-from bot.services.supabase_service import SupabaseTracksService
+from bot.services.github_service import GitHubTracksService
 
 
 async def main() -> None:
@@ -22,16 +22,15 @@ async def main() -> None:
     dp = Dispatcher()
     dp.include_router(tracks_router)
 
-    tracks_service = SupabaseTracksService(
-        url=settings.supabase_url,
-        service_role_key=settings.supabase_service_role_key,
-        bucket=settings.supabase_bucket,
+    tracks_service = GitHubTracksService(
+        token=settings.github_token,
+        repo=settings.github_repo,
+        branch=settings.github_branch,
     )
 
     await dp.start_polling(
         bot,
         tracks_service=tracks_service,
-        hook_url=settings.vercel_deploy_hook_url,
         admin_ids=settings.admin_ids,
     )
 
@@ -39,4 +38,3 @@ async def main() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
-

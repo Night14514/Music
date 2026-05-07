@@ -13,10 +13,9 @@ def _required(name: str) -> str:
 class Settings:
     bot_token: str
     admin_ids: set[int]
-    supabase_url: str
-    supabase_service_role_key: str
-    supabase_bucket: str
-    vercel_deploy_hook_url: str
+    github_token: str
+    github_repo: str
+    github_branch: str
 
 
 def load_settings() -> Settings:
@@ -25,9 +24,7 @@ def load_settings() -> Settings:
     return Settings(
         bot_token=_required("BOT_TOKEN"),
         admin_ids=admin_ids,
-        supabase_url=_required("SUPABASE_URL"),
-        supabase_service_role_key=_required("SUPABASE_SERVICE_ROLE_KEY"),
-        supabase_bucket=os.getenv("SUPABASE_BUCKET", "tracks"),
-        vercel_deploy_hook_url=_required("VERCEL_DEPLOY_HOOK_URL"),
+        github_token=_required("GITHUB_TOKEN"),
+        github_repo=_required("GITHUB_REPO"),
+        github_branch=os.getenv("GITHUB_BRANCH", "main"),
     )
-

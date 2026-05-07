@@ -7,8 +7,7 @@ from aiogram.types import CallbackQuery, Message
 from bot.handlers.admin_guard import deny_callback, deny_message, is_admin
 from bot.keyboards.delete_inline import delete_tracks_kb
 from bot.keyboards.main_menu import main_menu_kb
-from bot.services.deploy_service import trigger_redeploy
-from bot.services.supabase_service import SupabaseTracksService
+from bot.services.github_service import GitHubTracksService
 
 
 router = Router()
@@ -55,8 +54,7 @@ async def ask_upload(message: Message, state: FSMContext, admin_ids: set[int]) -
 async def handle_upload(
     message: Message,
     state: FSMContext,
-    tracks_service: SupabaseTracksService,
-    hook_url: str,
+    tracks_service: GitHubTracksService,
     admin_ids: set[int],
 ) -> None:
     if not message.from_user or not is_admin(message.from_user.id, admin_ids):
@@ -79,45 +77,31 @@ async def handle_upload(
         file_bytes = await message.bot.download_file(file_info.file_path)
         content = file_bytes.read()
         row = tracks_service.add_track(file_name, content)
-        await wait_msg.edit_text(f"✅ Успешно: добавлен трек\n🎵 {row['artist']} — {row['title']}")
-        await message.answer("🚀 Redeploy запущен")
-        ok = await trigger_redeploy(hook_url)
-        await message.answer("✅ Redeploy успешно" if ok else "❌ Redeploy ошибка")
-    except Exception as exc:  # noqa: BLE001
+        await wait_msg.edit_text(
+            f"✅ Успешно: добавлен трек\n🎵 {row['artist']} — {row['title']}\n\n"
+            f"⏳ Vercel задеплоит изменения автоматически (~1 мин)"
+        )
+    except Exception as exc:
         await wait_msg.edit_text(f"❌ Ошибка: {exc}")
     finally:
         await state.clear()
 
 
 @router.message(F.text == "📃 Список треков")
-async def list_tracks(message: Message, tracks_service: SupabaseTracksService, admin_ids: set[int]) -> None:
+async def list_tracks(message: Message, tracks_service: GitHubTracksService, admin_ids: set[int]) -> None:
     if not message.from_user or not is_admin(message.from_user.id, admin_ids):
         await deny_message(message)
         return
-    try:
-        tracks = tracks_service.list_tracks()
-    except Exception:  # noqa: BLE001
-        await message.answer(
-            "❌ Ошибка доступа к таблице tracks.\n"
-            "Проверь, что SQL из `supabase/schema.sql` выполнен в Supabase."
-        )
-        return
+    tracks = tracks_service.list_tracks()
     await message.answer(_format_tracks(tracks))
 
 
 @router.message(F.text == "🗑 Удалить трек")
-async def delete_menu(message: Message, tracks_service: SupabaseTracksService, admin_ids: set[int]) -> None:
+async def delete_menu(message: Message, tracks_service: GitHubTracksService, admin_ids: set[int]) -> None:
     if not message.from_user or not is_admin(message.from_user.id, admin_ids):
         await deny_message(message)
         return
-    try:
-        tracks = tracks_service.list_tracks()
-    except Exception:  # noqa: BLE001
-        await message.answer(
-            "❌ Ошибка доступа к таблице tracks.\n"
-            "Проверь, что SQL из `supabase/schema.sql` выполнен в Supabase."
-        )
-        return
+    tracks = tracks_service.list_tracks()
     if not tracks:
         await message.answer("📃 Нечего удалять — список пуст.")
         return
@@ -127,13 +111,10 @@ async def delete_menu(message: Message, tracks_service: SupabaseTracksService, a
 @router.callback_query(F.data == "noop")
 async def noop(callback: CallbackQuery) -> None:
     await callback.answer()
-
-
 @router.callback_query(F.data.startswith("delete:"))
 async def delete_track(
     callback: CallbackQuery,
-    tracks_service: SupabaseTracksService,
-    hook_url: str,
+    tracks_service: GitHubTracksService,
     admin_ids: set[int],
 ) -> None:
     if not callback.from_user or not is_admin(callback.from_user.id, admin_ids):
@@ -144,14 +125,13 @@ async def delete_track(
     await callback.answer("⏳ Удаляю...")
     try:
         tracks_service.delete_track(track_id)
-        await callback.message.answer("✅ Успешно: трек удален")
-        await callback.message.answer("🚀 Redeploy запущен")
-        ok = await trigger_redeploy(hook_url)
-        await callback.message.answer("✅ Redeploy успешно" if ok else "❌ Redeploy ошибка")
-
+        await callback.message.answer(
+            "✅ Трек удалён\n⏳ Vercel задеплоит изменения автоматически (~1 мин)"
+        )
         tracks = tracks_service.list_tracks()
         if callback.message:
-            await callback.message.edit_reply_markup(reply_markup=delete_tracks_kb(tracks) if tracks else None)
-    except Exception as exc:  # noqa: BLE001
+            await callback.message.edit_reply_markup(
+                reply_markup=delete_tracks_kb(tracks) if tracks else None
+            )
+    except Exception as exc:
         await callback.message.answer(f"❌ Ошибка: {exc}")
-
