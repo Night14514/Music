@@ -1,39 +1,37 @@
-# Songless (угадай трек) — локальные mp3, без API
+# Songless (Next.js + Telegram Admin Bot)
 
-Production-ready веб-игра в стиле “songless”: слушаешь короткий отрывок, угадываешь трек/исполнителя, набираешь очки. Все аудио — **локально** в `public/tracks`.
+Управление треками вынесено из локальных файлов в внешние сервисы:
+- **Storage**: Supabase Storage (bucket `tracks`)
+- **DB**: Supabase Postgres (`public.tracks`)
+- **Админка**: Telegram bot (aiogram 3)
+- **Клиент**: Next.js App Router
 
-## Стек
+`public/tracks/tracks.json` больше не является источником истины.
 
-- Next.js (App Router)
-- Tailwind CSS (v4)
-- API routes: `src/app/api/*`
-- Fuzzy autocomplete: `Fuse.js`
-- Состояние: React state + `localStorage`
+## Архитектура
 
-## Данные треков
+- Telegram-бот принимает mp3, загружает в Supabase Storage, создает запись в таблице `tracks`, затем дергает Vercel Deploy Hook.
+- Удаление работает обратным путем: бот удаляет объект из storage и запись из БД.
+- `GET /api/tracks` в Next.js читает только БД и отдает:
+  - `tracks`
+  - `catalog`
+  - `totalTracks`
 
-Файл `public/tracks/tracks.json`:
+## DB схема
 
-```json
-[
-  { "id": 1, "title": "Blinding Lights", "artist": "The Weeknd", "file": "/tracks/1.mp3", "start": 12 }
-]
-```
+SQL лежит в `supabase/schema.sql`.
 
-Положи mp3 в `public/tracks/` и обнови `tracks.json`.
+## ENV
 
-## Логика игры (коротко)
+Скопируй `.env.example` в `.env` и заполни:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `BOT_TOKEN`
+- `ADMIN_IDS` (через запятую)
+- `SUPABASE_BUCKET` (по умолчанию `tracks`)
+- `VERCEL_DEPLOY_HOOK_URL`
 
-- 7 треков на игру.
-- 5 попыток на трек (визуальные блоки).
-- Длительность фрагмента: 10s.
-- Autocomplete (до 5 вариантов) с fuzzy-поиском по `title` и `artist`, навигация стрелками, `Enter` = выбор.
-- Аудио: `<audio>` без контролов, перемотка запрещена, на Play играет ровно `duration`, стартует с `start`.
-- Режимы:
-  - **Normal**: случайные 7 треков
-  - **Daily**: детерминированные 7 треков по дате (одинаковые для всех)
-
-## Запуск локально
+## Запуск web (Next.js)
 
 ```bash
 cd songless
@@ -41,18 +39,31 @@ npm i
 npm run dev
 ```
 
-Открой `http://localhost:3000`.
+## Запуск Telegram бота
 
-## Деплой на Vercel
+```bash
+cd songless/bot
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python -m bot.main
+```
 
-- Задеплой как обычный Next.js проект.
-- Никаких внешних API ключей не нужно.
-- Важно: mp3 должны лежать в `public/tracks` внутри проекта.
+## Bot UX
 
-## Структура
+- `/start` открывает меню:
+  - `📤 Загрузить трек`
+  - `🗑 Удалить трек`
+  - `📃 Список треков`
+- Статусы:
+  - `⏳ Загрузка...`
+  - `✅ Успешно`
+  - `❌ Ошибка`
+- Безопасность: whitelist по `ADMIN_IDS`.
 
-- `public/tracks/tracks.json` — каталог треков
-- `src/app/api/tracks/route.ts` — выдача набора треков (Normal/Daily) + каталог для autocomplete
-- `src/app/page.tsx` — UI и game loop
-- `src/lib/game.ts` — длительности, scoring, нормализация/проверка ответа
-- `src/lib/tracks.ts` — чтение `tracks.json` + детерминированная выборка для daily
+## Vercel Deploy Hook
+
+После добавления/удаления бот:
+1. отправляет `🚀 Redeploy запущен`
+2. вызывает `POST VERCEL_DEPLOY_HOOK_URL`
+3. сообщает результат `✅` или `❌`

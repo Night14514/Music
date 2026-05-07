@@ -28,7 +28,6 @@ function useLocalStorageState<T>(key: string, initial: T) {
       if (raw != null) setValue(JSON.parse(raw) as T);
     } catch {}
     didLoadRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   useEffect(() => {
