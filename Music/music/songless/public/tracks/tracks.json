@@ -12,5 +12,12 @@
     "artist": "Unknown",
     "file": "/tracks/Kill_Eva,_ENCASSATOR,_Ярослав_Косилов,_Ярослав_Кос.mp3",
     "start": 19
+  },
+  {
+    "id": 3,
+    "title": "Сломана",
+    "artist": "SEREBRO",
+    "file": "/tracks/SEREBRO - Сломана.mp3",
+    "start": 12
   }
 ]
