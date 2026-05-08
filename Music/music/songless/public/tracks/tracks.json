@@ -19,5 +19,12 @@
     "artist": "SEREBRO",
     "file": "/tracks/SEREBRO - Сломана.mp3",
     "start": 12
+  },
+  {
+    "id": 4,
+    "title": "Sweet dreams",
+    "artist": "Kill_Eva",
+    "file": "/tracks/Kill_Eva - Sweet dreams.mp3",
+    "start": 19
   }
 ]
